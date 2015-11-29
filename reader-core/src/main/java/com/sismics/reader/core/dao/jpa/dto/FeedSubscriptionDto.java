@@ -1,5 +1,7 @@
 package com.sismics.reader.core.dao.jpa.dto;
 
+import java.util.Date;
+
 /**
  * Feed subscription DTO.
  *
@@ -15,6 +17,11 @@ public class FeedSubscriptionDto {
      * Feed subscription title.
      */
     private String feedSubscriptionTitle;
+    
+    /**
+     * Feed title.
+     */
+    private String feedTitle;
 
     /**
      * User ID.
@@ -45,6 +52,16 @@ public class FeedSubscriptionDto {
      * Number of unread articles by this user in this subscription.
      */
     private Integer unreadUserArticleCount;
+    
+    /**
+     * Number of synchronization fails recently.
+     */
+    private Integer synchronizationFailCount;
+    
+    /**
+     * Create date.
+     */
+    private Date createDate;
 
     /**
      * Category ID.
@@ -280,5 +297,29 @@ public class FeedSubscriptionDto {
      */
     public void setCategoryFolded(boolean categoryFolded) {
         this.categoryFolded = categoryFolded;
+    }
+
+    public String getFeedTitle() {
+        return feedTitle;
+    }
+
+    public void setFeedTitle(String feedTitle) {
+        this.feedTitle = feedTitle;
+    }
+
+    public Date getCreateDate() {
+        return createDate;
+    }
+
+    public void setCreateDate(Date createDate) {
+        this.createDate = createDate;
+    }
+
+    public Integer getSynchronizationFailCount() {
+        return synchronizationFailCount;
+    }
+
+    public void setSynchronizationFailCount(Integer synchronizationFailCount) {
+        this.synchronizationFailCount = synchronizationFailCount;
     }
 }

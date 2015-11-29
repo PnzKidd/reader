@@ -29,7 +29,7 @@ r.subscription.init = function() {
     hide: { event: 'click unfocus' },
     style: { classes: 'qtip-light qtip-shadow' },
     events: {
-      visible: function(e, api) { $('#subscription-url-input').focus(); }
+      visible: function() { $('#subscription-url-input').focus(); }
     }
   });
   
@@ -176,8 +176,9 @@ r.subscription.buildSubscriptionItem = function(subscription) {
   return '<li id="subscription-' + subscription.id + '" data-subscription-id="' + subscription.id + '" data-subscription-url="' + subscription.url + '" ' +
     'class="subscription' + (r.feed.context.subscriptionId == subscription.id ? ' active' : '') + (subscription.unread_count > 0 ? ' unread' : '') + '">' +
     '<a href="#/feed/subscription/' + subscription.id + '" title="' + title + '"> <img src="' + r.util.url.subscription_favicon.replace('{id}', subscription.id) + '" /> ' +
+    (subscription.sync_fail_count >= 5 ? '<img src="images/warning.png" title="' + $.t('subscription.syncfail') + '" />' : '') +
     '<span class="title">' + title + '</span>' + unread + '</a>' +
-    '<div class="edit"></div>' + 
+    '<div class="edit"></div>' +
     '</li>';
 };
 
@@ -285,15 +286,16 @@ r.subscription.initCollapsing = function() {
  * Initializing editing feature.
  */
 r.subscription.initEditing = function() {
-//Subscriptions editing
+  //Subscriptions editing
   $('#subscription-list li.subscription > .edit').each(function() {
     // Initializing edit popup
     var parent = $(this).parent();
+    var _this = $(this);
     var subscriptionId = parent.attr('data-subscription-id');
     var content = $('#template .qtip-subscription-edit').clone();
+    var infoContent = $('#template .qtip-subscription-edit-info').clone();
     var titleInput = content.find('.subscription-edit-title-input');
     titleInput.val(parent.find('> a .title').text().trim());
-    content.find('.subscription-edit-url').html('<strong>URL:</strong> ' + parent.attr('data-subscription-url'));
     
     // Calling API delete
     $('.subscription-edit-delete-button', content).click(function() {
@@ -326,9 +328,55 @@ r.subscription.initEditing = function() {
           }
         });
       }
-      
+
       // Prevent form submission
       return false;
+    });
+
+    // Opening informations popup
+    $('.subscription-edit-info-button', content).click(function() {
+      _this.qtip('hide');
+
+      // Get feed informations
+      r.util.ajax({
+        url: r.util.url.subscription_get.replace('{id}', subscriptionId),
+        data: { limit: 0 },
+        type: 'GET',
+        done: function(data) {
+          var table = $('.subscription-edit-info-table tbody', infoContent);
+          $('.title', table).html(r.util.escape(data.subscription.title));
+          $('.feed_title', table).html(r.util.escape(data.subscription.feed_title));
+          $('.url', table)
+              .attr('href', data.subscription.url)
+              .html(data.subscription.url);
+          $('.rss_url', table)
+              .attr('href', data.subscription.rss_url)
+              .html(data.subscription.rss_url);
+          $('.category_name', table).html(data.subscription.category_name);
+          var date = moment(data.subscription.create_date);
+          $('.create_date', table)
+              .attr('title', date.format('L LT'))
+              .html(date.fromNow());
+        }
+      });
+
+      // Get latest synchronizations
+      r.util.ajax({
+        url: r.util.url.subscription_sync.replace('{id}', subscriptionId),
+        type: 'GET',
+        done: function(data) {
+          var html = '';
+          $(data.synchronizations).each(function(i, sync) {
+            var date = moment(sync.create_date);
+            html += '<tr>' +
+                '<td title="' + (sync.message ? sync.message : '') + '">' + (sync.success ? $.t('feed.info.syncok') : $.t('feed.info.syncfail')) + '</td>' +
+                '<td title="' + date.format('L LT') + '">' + date.fromNow() + '</td>' +
+                '<td>' + sync.duration + 'ms</td>' +
+                '</tr>';
+          });
+          $('.subscription-edit-info-synctable tbody', infoContent).html(html);
+        }
+      });
     });
     
     // Creating edit popup
@@ -342,6 +390,26 @@ r.subscription.initEditing = function() {
       },
       show: { event: 'click' },
       hide: { event: 'click unfocus' },
+      style: { classes: 'qtip-light qtip-shadow' }
+    });
+
+    // Creation informations popup
+    $('.subscription-edit-info-button', content).qtip({
+      content: { text: infoContent },
+      position: {
+        my: 'center',
+        at: 'center',
+        target: $(document.body)
+      },
+      show: {
+        modal: {
+          on: true,
+          blur: true,
+          escape: true
+        },
+        event: 'click'
+      },
+      hide: { event: '' },
       style: { classes: 'qtip-light qtip-shadow' }
     });
   });

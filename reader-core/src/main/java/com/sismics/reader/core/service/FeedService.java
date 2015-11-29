@@ -8,6 +8,7 @@ import com.sismics.reader.core.dao.file.rss.RssReader;
 import com.sismics.reader.core.dao.jpa.ArticleDao;
 import com.sismics.reader.core.dao.jpa.FeedDao;
 import com.sismics.reader.core.dao.jpa.FeedSubscriptionDao;
+import com.sismics.reader.core.dao.jpa.FeedSynchronizationDao;
 import com.sismics.reader.core.dao.jpa.UserArticleDao;
 import com.sismics.reader.core.dao.jpa.criteria.ArticleCriteria;
 import com.sismics.reader.core.dao.jpa.criteria.FeedCriteria;
@@ -24,6 +25,7 @@ import com.sismics.reader.core.model.context.AppContext;
 import com.sismics.reader.core.model.jpa.Article;
 import com.sismics.reader.core.model.jpa.Feed;
 import com.sismics.reader.core.model.jpa.FeedSubscription;
+import com.sismics.reader.core.model.jpa.FeedSynchronization;
 import com.sismics.reader.core.model.jpa.UserArticle;
 import com.sismics.reader.core.util.ReaderHttpClient;
 import com.sismics.reader.core.util.TransactionUtil;
@@ -32,7 +34,9 @@ import com.sismics.reader.core.util.jpa.PaginatedLists;
 import com.sismics.reader.core.util.sanitizer.ArticleSanitizer;
 import com.sismics.reader.core.util.sanitizer.TextSanitizer;
 import com.sismics.util.UrlUtil;
+
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.joda.time.Instant;
@@ -74,18 +78,7 @@ public class FeedService extends AbstractScheduledService {
             TransactionUtil.handle(new Runnable() {
                 @Override
                 public void run() {
-                    FeedDao feedDao = new FeedDao();
-                    FeedCriteria feedCriteria = new FeedCriteria();
-                    feedCriteria.setWithUserSubscription(true);
-                    List<FeedDto> feedList = feedDao.findByCriteria(feedCriteria);
-                    for (FeedDto feed : feedList) {
-                        try {
-                            synchronize(feed.getRssUrl());
-                            TransactionUtil.commit();
-                        } catch (Exception e) {
-                            log.error(MessageFormat.format("Error synchronizing feed at URL: {0}", feed.getRssUrl()), e);
-                        }
-                    }
+                    synchronizeAllFeeds();
                 }
             });
         } catch (Throwable t) {
@@ -99,6 +92,54 @@ public class FeedService extends AbstractScheduledService {
         return Scheduler.newFixedDelaySchedule(0, 10, TimeUnit.MINUTES);
     }
     
+    /**
+     * Synchronize all feeds.
+     */
+    public void synchronizeAllFeeds() {
+        // Update all feeds currently having subscribed users
+        FeedDao feedDao = new FeedDao();
+        FeedCriteria feedCriteria = new FeedCriteria();
+        feedCriteria.setWithUserSubscription(true);
+        List<FeedDto> feedList = feedDao.findByCriteria(feedCriteria);
+        List<FeedSynchronization> feedSynchronizationList = new ArrayList<FeedSynchronization>();
+        for (FeedDto feed : feedList) {
+            FeedSynchronization feedSynchronization = new FeedSynchronization();
+            feedSynchronization.setFeedId(feed.getId());
+            feedSynchronization.setSuccess(true);
+            long startTime = System.currentTimeMillis();
+            
+            try {
+                synchronize(feed.getRssUrl());
+            } catch (Exception e) {
+                log.error(MessageFormat.format("Error synchronizing feed at URL: {0}", feed.getRssUrl()), e);
+                feedSynchronization.setSuccess(false);
+                feedSynchronization.setMessage(ExceptionUtils.getStackTrace(e));
+            }
+            feedSynchronization.setDuration((int) (System.currentTimeMillis() - startTime));
+            feedSynchronizationList.add(feedSynchronization);
+            TransactionUtil.commit();
+        }
+
+        // If all feeds have failed, then we infer that the network is probably down
+        FeedSynchronizationDao feedSynchronizationDao = new FeedSynchronizationDao();
+        boolean networkDown = true;
+        for (FeedSynchronization feedSynchronization : feedSynchronizationList) {
+            if (feedSynchronization.isSuccess()) {
+                networkDown = false;
+                break;
+            }
+        }
+
+        // Update the status of all synchronized feeds
+        if (!networkDown) {
+            for (FeedSynchronization feedSynchronization : feedSynchronizationList) {
+                feedSynchronizationDao.create(feedSynchronization);
+                feedSynchronizationDao.deleteOldFeedSynchronization(feedSynchronization.getFeedId(), 600);
+            }
+            TransactionUtil.commit();
+        }
+    }
+
     /**
      * Synchronize the feed to local database.
      * 
@@ -253,6 +294,7 @@ public class FeedService extends AbstractScheduledService {
         if (log.isInfoEnabled()) {
             log.info(MessageFormat.format("Synchronization done in {0}ms", endTime - startTime));
         }
+        
         return feed;
     }
     
@@ -340,6 +382,8 @@ public class FeedService extends AbstractScheduledService {
                 userArticle.setArticleId(userArticleDto.getArticleId());
                 userArticle.setUserId(userId);
                 userArticleDao.create(userArticle);
+                feedSubscription.setUnreadCount(feedSubscription.getUnreadCount() + 1);
+            } else if (userArticleDto.getReadTimestamp() == null) {
                 feedSubscription.setUnreadCount(feedSubscription.getUnreadCount() + 1);
             }
         }

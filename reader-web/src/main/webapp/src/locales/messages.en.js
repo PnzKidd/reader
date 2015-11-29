@@ -34,6 +34,7 @@
     "emptyunread": "No unread subscription",
     "showall": "Show all",
     "toggleunread": "Toggle all/unread subscriptions",
+    "syncfail": "All latest synchronizations failed",
     "add": {
       "button": "New subscription",
       "placeholder": "Paste a feed or website URL",
@@ -44,6 +45,7 @@
       "placeholder": "Title",
       "submit": "OK",
       "delete": "Delete",
+      "info": "Informations",
       "deleteconfirm": "Do you really want to delete this subscription?"
     }
   },
@@ -165,7 +167,22 @@
     "noarticle": "No article",
     "nonewarticle": "All read!",
     "showall": "Show all",
-    "retry": "Retry"
+    "retry": "Retry",
+    "info": {
+      "syncok": "Success",
+      "syncfail": "Error",
+      "titlemain": "Feed informations",
+      "titlesync": "Latest synchronizations",
+      "title": "Customized title",
+      "feed_title": "Original title",
+      "url": "URL",
+      "rss_url": "RSS URL",
+      "category_name": "Category",
+      "create_date": "Date added",
+      "status": "Status",
+      "date": "Date",
+      "duration": "Duration"
+    }
   },
   "wizard": {
     "title": "Sismics Reader installation wizard",

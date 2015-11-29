@@ -34,6 +34,7 @@
     "emptyunread": "Aucun abonnement non-lu",
     "showall": "Tout afficher",
     "toggleunread": "Abonnements lus/non-lus",
+    "syncfail": "Toutes les dernières synchronisations ont échouées",
     "add": {
       "button": "Ajouter un abonnement",
       "placeholder": "Coller l'URL d'un flux ou d'un site",
@@ -44,6 +45,7 @@
       "placeholder": "Titre",
       "submit": "OK",
       "delete": "Supprimer",
+      "info": "Informations",
       "deleteconfirm": "Êtes-vous sûr de vouloir supprimer cet abonnement ?"
     }
   },
@@ -165,7 +167,22 @@
     "noarticle": "Aucun articles",
     "nonewarticle": "Tout lu !",
     "showall": "Tout afficher",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "info": {
+      "syncok": "Succès",
+      "syncfail": "Erreur",
+      "titlemain": "Informations abonnement",
+      "titlesync": "Dernières synchronisations",
+      "title": "Titre modifié",
+      "feed_title": "Titre original",
+      "url": "URL",
+      "rss_url": "URL RSS",
+      "category_name": "Catégorie",
+      "create_date": "Date d'ajout",
+      "status": "État",
+      "date": "Date",
+      "duration": "Durée"
+    }
   },
   "wizard": {
     "title": "Assistant d'installation Sismics Reader",

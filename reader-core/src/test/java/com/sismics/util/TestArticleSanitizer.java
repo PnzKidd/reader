@@ -17,7 +17,7 @@ import java.util.List;
  */
 public class TestArticleSanitizer {
     /**
-     * Tests the article sanitizer.
+     * Tests that the image relative URLs are transformed to absolute form.
      * 
      * @throws Exception
      */
@@ -42,7 +42,7 @@ public class TestArticleSanitizer {
     }
 
     /**
-     * Tests the article sanitizer.
+     * Tests that the image relative URLs are transformed to absolute form.
      *
      * @throws Exception
      */
@@ -66,7 +66,7 @@ public class TestArticleSanitizer {
     }
 
     /**
-     * Tests the article sanitizer.
+     * Tests that the image relative URLs are transformed to absolute form.
      * 
      * @throws Exception
      */
@@ -85,10 +85,37 @@ public class TestArticleSanitizer {
         // Images: transform relative URLs to absolute
         ArticleSanitizer articleSanitizer = new ArticleSanitizer();
         Assert.assertTrue(article.getDescription().contains("\"res/tern_simple_graph.png\""));
-        String html = articleSanitizer.sanitize(article.getBaseUri(), article.getDescription());
         Assert.assertEquals("http://marijnhaverbeke.nl/blog/", article.getBaseUri());
+        String html = articleSanitizer.sanitize(article.getBaseUri(), article.getDescription());
         Assert.assertFalse(html.contains("\"res/tern_simple_graph.png\""));
         Assert.assertTrue(html.contains("\"http://marijnhaverbeke.nl/blog/res/tern_simple_graph.png\""));
+    }
+
+    /**
+     * Tests that the image relative links are transformed to absolute form.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void articleSanitizerLinkTest() throws Exception {
+        // Load a feed
+        InputStream is = getClass().getResourceAsStream("/feed/feed_atom_github_user.xml");
+        RssReader reader = new RssReader();
+        reader.readRssFeed(is);
+        Feed feed = reader.getFeed();
+        Assert.assertEquals("naku’s Activity", feed.getTitle());
+        List<Article> articleList = reader.getArticleList();
+        Assert.assertEquals(7, articleList.size());
+        Article article = articleList.get(0);
+
+        // Links: transform relative URLs to absolute
+        ArticleSanitizer articleSanitizer = new ArticleSanitizer();
+        Assert.assertTrue(article.getDescription().contains("\"/sismics/reader/commit/b7414b12d88c13b5af15df7d30ba8c1e47232d4d\""));
+        String baseUrl = UrlUtil.getBaseUri(feed, article);
+        Assert.assertEquals("https://github.com", baseUrl);
+        String html = articleSanitizer.sanitize(baseUrl, article.getDescription());
+        Assert.assertFalse(html.contains("\"/sismics/reader/commit/b7414b12d88c13b5af15df7d30ba8c1e47232d4d\""));
+        Assert.assertTrue(html.contains("\"https://github.com/sismics/reader/commit/b7414b12d88c13b5af15df7d30ba8c1e47232d4d\""));
     }
 
     /**
@@ -355,6 +382,7 @@ public class TestArticleSanitizer {
                 + "<iframe src=\"//www.slideshare.net/slideshow/embed_code/37454624\" width=\"480\" height=\"480\"></iframe>"
                 + "<iframe src=\"//hitbox.tv/#!/embed/CymaticBruce\" width=\"480\" height=\"480\"></iframe>"
                 + "<iframe src=\"//embed.spotify.com/?uri=spotify:album:3NNSJt3gWSmPmnjCwZyLA5\" width=\"480\" height=\"480\"></iframe>"
+                + "<iframe src=\"//soundsgood.co/embed/5634c158722be1b60e7651be\" width=\"480\" height=\"480\"></iframe>"
                 + "<iframe src=\"//www.kickstarter.com/projects/223628811/the-airboard-sketch-internet-of-things-fast/widget/video.html\" width=\"480\" height=\"480\"></iframe>");
         System.out.println(html);
         Assert.assertTrue(html.contains("<iframe src=\"//www.deezer.com/plugins/player?autoplay&#61;false&amp;playlist&#61;true\" width=\"480\" height=\"480\"></iframe>"));
@@ -362,6 +390,7 @@ public class TestArticleSanitizer {
         Assert.assertTrue(html.contains("<iframe src=\"//www.slideshare.net/slideshow/embed_code/37454624\" width=\"480\" height=\"480\"></iframe>"));
         Assert.assertTrue(html.contains("<iframe src=\"//hitbox.tv/#!/embed/CymaticBruce\" width=\"480\" height=\"480\"></iframe>"));
         Assert.assertTrue(html.contains("<iframe src=\"//embed.spotify.com/?uri&#61;spotify:album:3NNSJt3gWSmPmnjCwZyLA5\" width=\"480\" height=\"480\"></iframe>"));
+        Assert.assertTrue(html.contains("<iframe src=\"//soundsgood.co/embed/5634c158722be1b60e7651be\" width=\"480\" height=\"480\"></iframe>"));
         Assert.assertTrue(html.contains("<iframe src=\"//www.kickstarter.com/projects/223628811/the-airboard-sketch-internet-of-things-fast/widget/video.html\" width=\"480\" height=\"480\"></iframe>"));
     }
 }
