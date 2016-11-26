@@ -6,3 +6,4 @@ docker run \
     -v sismics_reader_data:/data \
     -e 'VIRTUAL_HOST_SECURE=reader.sismics.com' -e 'VIRTUAL_PORT=80' \
     sismics/reader:latest
+
