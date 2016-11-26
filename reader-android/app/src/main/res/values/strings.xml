@@ -6,7 +6,7 @@
     <string name="drawer_open">Open navigation drawer</string>
     <string name="drawer_close">Close navigation drawer</string>
     <string name="login_explain"><![CDATA[To start, you must download and install Sismics Reader Server on <a href="http://www.sismics.com/reader">www.sismics.com/reader</a> and enter your server URL below]]></string>
-    <string name="server_url_hint">reader.sismics.com</string>
+    <string name="server_url_hint" translatable="false">reader.sismics.com</string>
     <string name="server">Server</string>
     <string name="username">Username</string>
     <string name="password">Password</string>
@@ -53,7 +53,8 @@
     <string name="add_subscription_error">Error adding this subscription</string>
     <string name="add_subscription_success">Subscription successfully added</string>
     <string name="add">Add</string>
-    <string name="extension_description">Displays the number of unread articles</string>
+    <!-- Don't translate extension_description, it is used in the manifest and must not vary. -->
+    <string name="extension_description" translatable="false">Displays the number of unread articles</string>
     <string name="extension_expanded_title">%1$d unread articles</string>
     <string name="enclosure">Enclosure</string>
     <string name="touch_close">Touch to close</string>
@@ -99,7 +100,7 @@
     <string name="pref_license_title">Open source licenses</string>
     <string name="pref_license_summary">Legal information about licenses</string>
     <string name="pref_website">Website</string>
-    <string name="pref_github">GitHub</string>
+    <string name="pref_github" translatable="false">GitHub</string>
     <string name="pref_issue">Report a bug</string>
     <string name="pref_clear_history_title">Clear search history</string>
     <string name="pref_clear_history_summary">Wipe the recent search suggestions</string>
@@ -113,7 +114,7 @@
     <string name="validate_error_alphanumeric">Only letters and numbers</string>
     
     <!-- Open source licenses content -->
-    <string name="licenses_content">
+    <string name="licenses_content" translatable="false">
       <![CDATA[
         <div>
           <h2>ViewPagerIndicator</h2>
